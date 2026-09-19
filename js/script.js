@@ -59,6 +59,173 @@ function isExecutiveUser(u) {
   return true;
 }
 
+/* ==========================================================================
+   DEMO SEED DATA - TEMPORARY
+   Automatic demo account seeding for client demos & Netlify multi-device testing
+   ========================================================================== */
+
+const DEMO_SEEDS = {
+  admin: {
+    id: 'admin-vidyalam',
+    employeeId: 'HR-ADMIN',
+    name: 'Super Admin',
+    email: 'hr@vidyalam.in',
+    mobile: '+91 98765 00000',
+    territory: 'Corporate',
+    password: 'demo-admin-2026',
+    role: 'SUPER_ADMIN',
+    status: 'Active',
+    joiningDate: '2024-01-01',
+    createdAt: '2024-01-01T09:00:00.000Z',
+    updatedAt: '2024-01-01T09:00:00.000Z',
+  },
+  executives: [
+    {
+      id: 'exec-02',
+      employeeId: '02',
+      name: 'Sumit',
+      email: 'sumit@gmail.com',
+      mobile: '9759602121',
+      territory: 'INDIA',
+      password: 'Test@12345',
+      role: 'SALES_EXECUTIVE',
+      status: 'Active',
+      joiningDate: '2026-01-01',
+      createdAt: '2026-01-01T09:00:00.000Z',
+      updatedAt: '2026-01-01T09:00:00.000Z',
+    },
+    {
+      id: 'exec-01',
+      employeeId: '01',
+      name: 'Abhay',
+      email: 'demo@vidyalam.in',
+      mobile: '9319963315',
+      territory: 'INDIA',
+      password: 'demo-exec-2026',
+      role: 'SALES_EXECUTIVE',
+      status: 'Active',
+      joiningDate: '2024-01-15',
+      createdAt: '2024-01-15T09:00:00.000Z',
+      updatedAt: '2024-01-15T09:00:00.000Z',
+    },
+  ],
+};
+
+function getStoredUsers() {
+  try {
+    const raw = localStorage.getItem('vidyalam_users');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {}
+
+  for (const key of ['salesExecutives', 'executives', 'users']) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+  }
+  return [];
+}
+
+function saveStoredUsers(users) {
+  try {
+    const json = JSON.stringify(users);
+    localStorage.setItem('vidyalam_users', json);
+    localStorage.setItem('salesExecutives', json);
+    localStorage.setItem('executives', json);
+    localStorage.setItem('users', json);
+  } catch (e) {}
+}
+
+function initDemoSeedUsers() {
+  try {
+    const stored = getStoredUsers();
+    let modified = false;
+
+    // Check Sumit (Email: sumit@gmail.com, Employee ID: 02)
+    const hasSumit = stored.some((u) => {
+      if (!u || u.status === 'Deleted') return false;
+      const em = normalizeLoginId(u.email);
+      const eid = normalizeLoginId(u.employeeId);
+      const eidClean = eid.replace(/^0+/, '');
+      return em === 'sumit@gmail.com' || eid === '02' || eidClean === '2';
+    });
+
+    if (!hasSumit) {
+      stored.push({ ...DEMO_SEEDS.executives[0] });
+      modified = true;
+    } else {
+      const sumitUser = stored.find((u) => {
+        if (!u || u.status === 'Deleted') return false;
+        const em = normalizeLoginId(u.email);
+        const eid = normalizeLoginId(u.employeeId);
+        const eidClean = eid.replace(/^0+/, '');
+        return em === 'sumit@gmail.com' || eid === '02' || eidClean === '2';
+      });
+      if (sumitUser && !sumitUser.password) {
+        sumitUser.password = 'Test@12345';
+        modified = true;
+      }
+    }
+
+    // Check Abhay (Email: demo@vidyalam.in, Employee ID: 01)
+    const hasAbhay = stored.some((u) => {
+      if (!u || u.status === 'Deleted') return false;
+      const em = normalizeLoginId(u.email);
+      const eid = normalizeLoginId(u.employeeId);
+      const eidClean = eid.replace(/^0+/, '');
+      return em === 'demo@vidyalam.in' || eid === '01' || eidClean === '1';
+    });
+
+    if (!hasAbhay) {
+      stored.push({ ...DEMO_SEEDS.executives[1] });
+      modified = true;
+    } else {
+      const abhayUser = stored.find((u) => {
+        if (!u || u.status === 'Deleted') return false;
+        const em = normalizeLoginId(u.email);
+        const eid = normalizeLoginId(u.employeeId);
+        const eidClean = eid.replace(/^0+/, '');
+        return em === 'demo@vidyalam.in' || eid === '01' || eidClean === '1';
+      });
+      if (abhayUser && !abhayUser.password) {
+        abhayUser.password = 'demo-exec-2026';
+        modified = true;
+      }
+    }
+
+    // Check Super Admin (Email: hr@vidyalam.in, Role: SUPER_ADMIN)
+    const hasAdmin = stored.some((u) => {
+      if (!u) return false;
+      const em = normalizeLoginId(u.email);
+      return em === 'hr@vidyalam.in' || u.role === 'SUPER_ADMIN';
+    });
+
+    if (!hasAdmin) {
+      stored.unshift({ ...DEMO_SEEDS.admin });
+      modified = true;
+    }
+
+    if (modified) {
+      saveStoredUsers(stored);
+    }
+
+    if (!state.users || state.users.length === 0) {
+      state.users = stored;
+    }
+  } catch (err) {
+    console.warn('Demo seed user initialization error:', err);
+  }
+}
+
+// Immediately seed demo accounts on script evaluation
+initDemoSeedUsers();
+
 /* ==========================================
    CLIENT SESSION STORAGE (AUTH TOKEN ONLY)
 ========================================== */
@@ -91,7 +258,7 @@ function clearCurrentUser() {
 }
 
 /* ==========================================
-   BACKEND REST API CLIENT
+   BACKEND REST API & LOCAL MULTI-DEVICE CLIENT
 ========================================== */
 const api = {
   getToken() {
@@ -115,87 +282,280 @@ const api = {
         headers,
       });
 
-      const data = await response.json().catch(() => ({}));
-      if (response.status === 401) {
-        if (PAGE !== 'index.html') {
+      if (!response.ok) {
+        if (response.status === 401 && PAGE !== 'index.html') {
           clearCurrentUser();
           window.location.href = 'index.html';
         }
+        return { success: false, status: response.status, message: `Server returned status ${response.status}` };
       }
+
+      const data = await response.json().catch(() => ({}));
       return data;
     } catch (err) {
-      console.error('API Network Error:', err);
-      return { success: false, message: 'Unable to connect to shared server. Please verify your connection.' };
+      return { success: false, message: 'Unable to connect to shared server.' };
     }
   },
 
   async login(identifier, password) {
-    const res = await this.request('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ identifier, password }),
-    });
-    if (res.success && res.user && res.token) {
-      setCurrentUser({ ...res.user, token: res.token });
+    initDemoSeedUsers();
+
+    const normId = normalizeLoginId(identifier);
+    const normIdClean = normId.replace(/^0+/, '');
+
+    // 1. Try server backend if available
+    let res = null;
+    try {
+      res = await this.request('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ identifier, password }),
+      });
+    } catch (e) {
+      res = null;
     }
-    return res;
+
+    if (res && res.success && res.user && res.token) {
+      setCurrentUser({ ...res.user, token: res.token });
+      return res;
+    }
+
+    // 2. Client-side authentication fallback (for Netlify static deployment and offline use)
+    
+    // Check Super Admin
+    if (
+      normId === APP_CONFIG.superAdminEmail.toLowerCase() ||
+      normId === 'hr-admin' ||
+      normId === 'admin'
+    ) {
+      if (password === APP_CONFIG.superAdminPassword) {
+        const adminUser = {
+          id: 'admin-vidyalam',
+          employeeId: 'HR-ADMIN',
+          name: 'Super Admin',
+          email: 'hr@vidyalam.in',
+          mobile: '+91 98765 00000',
+          territory: 'Corporate',
+          role: 'SUPER_ADMIN',
+          status: 'Active',
+          token: 'demo-token-admin-' + Date.now(),
+        };
+        setCurrentUser(adminUser);
+        return { success: true, user: adminUser, token: adminUser.token };
+      } else {
+        return { success: false, message: 'Invalid password. Please try again.' };
+      }
+    }
+
+    // Check Sales Executives in stored demo/admin users
+    const users = getStoredUsers();
+    const exec = users.find((u) => {
+      if (!u || u.status === 'Deleted') return false;
+      const uEmail = normalizeLoginId(u.email);
+      const uEmpId = normalizeLoginId(u.employeeId);
+      const uEmpIdClean = uEmpId.replace(/^0+/, '');
+
+      return (
+        uEmail === normId ||
+        uEmpId === normId ||
+        (normIdClean && uEmpIdClean === normIdClean)
+      );
+    });
+
+    if (!exec) {
+      return { success: false, message: 'Account not found. Please check your email or employee ID.' };
+    }
+
+    if (exec.status === 'Inactive') {
+      return { success: false, message: 'This account is inactive. Please contact Super Admin.' };
+    }
+
+    const expectedPassword = exec.password || (exec.employeeId === '02' ? 'Test@12345' : 'demo-exec-2026');
+    if (password !== expectedPassword) {
+      return { success: false, message: 'Invalid password. Please try again.' };
+    }
+
+    const sessionUser = {
+      id: exec.id || `exec-${exec.employeeId}`,
+      employeeId: exec.employeeId,
+      name: exec.name,
+      email: exec.email,
+      mobile: exec.mobile || '',
+      territory: exec.territory || 'INDIA',
+      role: 'SALES_EXECUTIVE',
+      status: exec.status || 'Active',
+      joiningDate: exec.joiningDate || '',
+      token: 'demo-token-exec-' + Date.now(),
+    };
+    setCurrentUser(sessionUser);
+    return { success: true, user: sessionUser, token: sessionUser.token };
   },
 
   async fetchMe() {
-    return await this.request('/auth/me');
+    try {
+      const res = await this.request('/auth/me');
+      if (res && res.success && res.user) {
+        return res;
+      }
+    } catch (e) {}
+
+    const user = getCurrentUser();
+    if (user && user.token) {
+      return { success: true, user };
+    }
+    return { success: false, message: 'Not authenticated.' };
   },
 
   async logout() {
-    await this.request('/auth/logout', { method: 'POST' });
+    try {
+      await this.request('/auth/logout', { method: 'POST' });
+    } catch (e) {}
     clearCurrentUser();
     window.location.href = 'index.html';
   },
 
   async fetchUsers() {
-    const res = await this.request('/users');
-    if (res.success && Array.isArray(res.users)) {
-      state.users = res.users;
+    try {
+      const res = await this.request('/users');
+      if (res && res.success && Array.isArray(res.users) && res.users.length > 0) {
+        state.users = res.users;
+        saveStoredUsers(res.users);
+        return state.users;
+      }
+    } catch (e) {}
+
+    // Fallback to local storage (e.g. Netlify)
+    const stored = getStoredUsers();
+    if (stored.length > 0) {
+      state.users = stored;
+    } else {
+      initDemoSeedUsers();
+      state.users = getStoredUsers();
     }
     return state.users;
   },
 
   async createExecutive(payload) {
-    const res = await this.request('/users', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
-    if (res.success && res.user) {
-      state.users.push(res.user);
+    let res = null;
+    try {
+      res = await this.request('/users', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+    } catch (e) {
+      res = null;
     }
-    return res;
+
+    let newUser = null;
+    if (res && res.success && res.user) {
+      newUser = res.user;
+    } else {
+      const now = new Date().toISOString();
+      newUser = {
+        id: 'exec-' + Date.now(),
+        employeeId: payload.employeeId || '',
+        name: payload.name || '',
+        email: payload.email || '',
+        mobile: payload.mobile || '',
+        territory: payload.territory || '',
+        password: payload.password || 'Test@12345',
+        role: 'SALES_EXECUTIVE',
+        status: payload.status || 'Active',
+        joiningDate: payload.joiningDate || now.split('T')[0],
+        createdAt: now,
+        updatedAt: now,
+      };
+    }
+
+    const existingIdx = state.users.findIndex((u) => u.id === newUser.id);
+    if (existingIdx >= 0) {
+      state.users[existingIdx] = newUser;
+    } else {
+      state.users.push(newUser);
+    }
+
+    const stored = getStoredUsers();
+    const storedIdx = stored.findIndex(
+      (u) =>
+        u.id === newUser.id ||
+        (newUser.email && normalizeLoginId(u.email) === normalizeLoginId(newUser.email)) ||
+        (newUser.employeeId && normalizeLoginId(u.employeeId) === normalizeLoginId(newUser.employeeId))
+    );
+    if (storedIdx >= 0) {
+      stored[storedIdx] = newUser;
+    } else {
+      stored.push(newUser);
+    }
+    saveStoredUsers(stored);
+
+    return res && res.success ? res : { success: true, user: newUser };
   },
 
   async updateExecutive(id, payload) {
-    const res = await this.request(`/users/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(payload),
-    });
-    if (res.success && res.user) {
-      const idx = state.users.findIndex((u) => u.id === id);
-      if (idx >= 0) state.users[idx] = res.user;
+    let res = null;
+    try {
+      res = await this.request(`/users/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+      });
+    } catch (e) {
+      res = null;
     }
-    return res;
+
+    const idx = state.users.findIndex((u) => u.id === id);
+    if (idx >= 0) {
+      state.users[idx] = { ...state.users[idx], ...payload, updatedAt: new Date().toISOString() };
+    }
+
+    const stored = getStoredUsers();
+    const sIdx = stored.findIndex((u) => u.id === id);
+    if (sIdx >= 0) {
+      stored[sIdx] = { ...stored[sIdx], ...payload, updatedAt: new Date().toISOString() };
+      saveStoredUsers(stored);
+    }
+
+    return res && res.success ? res : { success: true, user: state.users[idx] };
   },
 
   async resetPassword(id, password) {
-    return await this.request(`/users/${id}/reset-password`, {
-      method: 'POST',
-      body: JSON.stringify({ password }),
-    });
+    let res = null;
+    try {
+      res = await this.request(`/users/${id}/reset-password`, {
+        method: 'POST',
+        body: JSON.stringify({ password }),
+      });
+    } catch (e) {
+      res = null;
+    }
+
+    const stored = getStoredUsers();
+    const u = stored.find((x) => x.id === id);
+    if (u) {
+      u.password = password;
+      saveStoredUsers(stored);
+    }
+    const memU = state.users.find((x) => x.id === id);
+    if (memU) {
+      memU.password = password;
+    }
+
+    return res && res.success ? res : { success: true, message: 'Password reset successfully.' };
   },
 
   async deleteExecutive(id) {
-    const res = await this.request(`/users/${id}`, {
-      method: 'DELETE',
-    });
-    if (res.success) {
-      state.users = state.users.filter((u) => u.id !== id);
+    let res = null;
+    try {
+      res = await this.request(`/users/${id}`, {
+        method: 'DELETE',
+      });
+    } catch (e) {
+      res = null;
     }
-    return res;
+
+    state.users = state.users.filter((u) => u.id !== id);
+    const stored = getStoredUsers().filter((u) => u.id !== id);
+    saveStoredUsers(stored);
+
+    return res && res.success ? res : { success: true, message: 'Executive removed successfully.' };
   },
 
   async fetchAttendance(date = '', employeeId = '') {
@@ -205,85 +565,199 @@ const api = {
     if (employeeId) params.set('employeeId', employeeId);
     if (params.toString()) url += `?${params.toString()}`;
 
-    const res = await this.request(url);
-    if (res.success && Array.isArray(res.attendance)) {
-      state.attendance = res.attendance;
+    try {
+      const res = await this.request(url);
+      if (res && res.success && Array.isArray(res.attendance)) {
+        state.attendance = res.attendance;
+        localStorage.setItem('vidyalam_attendance', JSON.stringify(res.attendance));
+        return state.attendance;
+      }
+    } catch (e) {}
+
+    try {
+      state.attendance = JSON.parse(localStorage.getItem('vidyalam_attendance') || '[]');
+    } catch (e) {
+      state.attendance = [];
     }
     return state.attendance;
   },
 
   async markAttendance(payload) {
-    const res = await this.request('/attendance', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
-    if (res.success && res.record) {
-      const idx = state.attendance.findIndex((a) => a.employeeId === res.record.employeeId && a.date === res.record.date);
-      if (idx >= 0) state.attendance[idx] = res.record;
-      else state.attendance.unshift(res.record);
+    let res = null;
+    try {
+      res = await this.request('/attendance', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+    } catch (e) {
+      res = null;
     }
-    return res;
+
+    let rec = (res && res.success && res.record) ? res.record : null;
+    if (!rec) {
+      rec = {
+        id: 'att-' + Date.now(),
+        attendanceId: 'att-' + Date.now(),
+        employeeId: payload.employeeId,
+        employeeName: payload.employeeName,
+        date: payload.date || getLocalDateString(),
+        status: payload.status,
+        checkInTime: payload.checkInTime || '',
+        reason: payload.reason || '',
+        createdAt: new Date().toISOString(),
+      };
+    }
+
+    const idx = state.attendance.findIndex((a) => a.employeeId === rec.employeeId && a.date === rec.date);
+    if (idx >= 0) state.attendance[idx] = rec;
+    else state.attendance.unshift(rec);
+
+    try {
+      localStorage.setItem('vidyalam_attendance', JSON.stringify(state.attendance));
+    } catch (e) {}
+
+    return res && res.success ? res : { success: true, record: rec };
   },
 
   async fetchVisits() {
-    const res = await this.request('/visits');
-    if (res.success && Array.isArray(res.visits)) {
-      state.visits = res.visits;
+    try {
+      const res = await this.request('/visits');
+      if (res && res.success && Array.isArray(res.visits)) {
+        state.visits = res.visits;
+        localStorage.setItem('vidyalam_visits', JSON.stringify(res.visits));
+        return state.visits;
+      }
+    } catch (e) {}
+
+    try {
+      state.visits = JSON.parse(localStorage.getItem('vidyalam_visits') || '[]');
+    } catch (e) {
+      state.visits = [];
     }
     return state.visits;
   },
 
   async createVisit(payload) {
-    const res = await this.request('/visits', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
-    if (res.success && res.visit) {
-      state.visits.unshift(res.visit);
+    let res = null;
+    try {
+      res = await this.request('/visits', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+    } catch (e) {
+      res = null;
     }
-    return res;
+
+    let newVisit = null;
+    if (res && res.success && res.visit) {
+      newVisit = res.visit;
+      state.visits.unshift(newVisit);
+    } else {
+      const now = new Date().toISOString();
+      newVisit = {
+        id: 'visit-' + Date.now(),
+        visitId: 'visit-' + Date.now(),
+        ...payload,
+        createdAt: now,
+        updatedAt: now,
+      };
+      state.visits.unshift(newVisit);
+    }
+
+    try {
+      localStorage.setItem('vidyalam_visits', JSON.stringify(state.visits));
+    } catch (e) {}
+
+    return res && res.success ? res : { success: true, visit: newVisit };
   },
 
   async saveVisitRemark(visitId, payload) {
-    const res = await this.request(`/visits/${visitId}/remark`, {
-      method: 'PUT',
-      body: JSON.stringify(payload),
-    });
-    if (res.success && res.visit) {
-      const idx = state.visits.findIndex((v) => v.visitId === visitId);
-      if (idx >= 0) state.visits[idx] = res.visit;
+    let res = null;
+    try {
+      res = await this.request(`/visits/${visitId}/remark`, {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+      });
+    } catch (e) {
+      res = null;
     }
-    return res;
+
+    const idx = state.visits.findIndex((v) => v.visitId === visitId);
+    if (idx >= 0) {
+      state.visits[idx].adminRemark = payload.adminRemark;
+      try {
+        localStorage.setItem('vidyalam_visits', JSON.stringify(state.visits));
+      } catch (e) {}
+    }
+
+    return res && res.success ? res : { success: true, visit: state.visits[idx] };
   },
 
   async fetchNotifications() {
-    const res = await this.request('/notifications');
-    if (res.success && Array.isArray(res.notifications)) {
-      state.notifications = res.notifications;
+    try {
+      const res = await this.request('/notifications');
+      if (res && res.success && Array.isArray(res.notifications)) {
+        state.notifications = res.notifications;
+        localStorage.setItem('vidyalam_notifications', JSON.stringify(res.notifications));
+        return state.notifications;
+      }
+    } catch (e) {}
+
+    try {
+      state.notifications = JSON.parse(localStorage.getItem('vidyalam_notifications') || '[]');
+    } catch (e) {
+      state.notifications = [];
     }
     return state.notifications;
   },
 
   async markNotificationRead(id) {
-    const res = await this.request(`/notifications/${id}/read`, { method: 'PUT' });
+    try {
+      await this.request(`/notifications/${id}/read`, { method: 'PUT' });
+    } catch (e) {}
     const notif = state.notifications.find((n) => n.id === id);
-    if (notif) notif.read = true;
-    return res;
+    if (notif) {
+      notif.read = true;
+      try {
+        localStorage.setItem('vidyalam_notifications', JSON.stringify(state.notifications));
+      } catch (e) {}
+    }
+    return { success: true };
   },
 
   async markAllNotificationsRead() {
-    const res = await this.request('/notifications/read-all', { method: 'PUT' });
+    try {
+      await this.request('/notifications/read-all', { method: 'PUT' });
+    } catch (e) {}
     state.notifications.forEach((n) => (n.read = true));
-    return res;
+    try {
+      localStorage.setItem('vidyalam_notifications', JSON.stringify(state.notifications));
+    } catch (e) {}
+    return { success: true };
   },
 
   async search(query) {
-    return await this.request(`/search?q=${encodeURIComponent(query)}`);
+    try {
+      const res = await this.request(`/search?q=${encodeURIComponent(query)}`);
+      if (res && res.success) return res;
+    } catch (e) {}
+
+    // Local search fallback
+    const q = query.toLowerCase();
+    const users = getUsers().filter(isExecutiveUser).filter((u) =>
+      [u.name, u.email, u.employeeId, u.territory, u.mobile].some((f) => (f || '').toLowerCase().includes(q))
+    );
+    const visits = getVisits().filter((v) =>
+      [v.customerName, v.companyName, v.contactPerson, v.purpose, v.mobile, v.executiveName].some((f) =>
+        (f || '').toLowerCase().includes(q)
+      )
+    );
+    return { success: true, users, visits };
   },
 
   async migrateLegacyData() {
     try {
-      const legacyUsers = JSON.parse(localStorage.getItem('vidyalam_users') || '[]');
+      const legacyUsers = getStoredUsers();
       const legacyVisits = JSON.parse(localStorage.getItem('vidyalam_visits') || '[]');
       const legacyAtt = JSON.parse(localStorage.getItem('vidyalam_attendance') || '[]');
       const legacyNotifs = JSON.parse(localStorage.getItem('vidyalam_notifications') || '[]');
@@ -298,14 +772,6 @@ const api = {
             notifications: legacyNotifs,
           }),
         });
-
-        localStorage.removeItem('vidyalam_users');
-        localStorage.removeItem('vidyalam_visits');
-        localStorage.removeItem('vidyalam_attendance');
-        localStorage.removeItem('vidyalam_notifications');
-        localStorage.removeItem('salesExecutives');
-        localStorage.removeItem('executives');
-        localStorage.removeItem('users');
       }
     } catch (e) {
       console.warn('Migration check error:', e);
@@ -315,7 +781,16 @@ const api = {
 
 /* Synchronous Accessors for UI rendering */
 function getUsers() {
-  return (state.users || []).filter((u) => u && u.status !== 'Deleted');
+  if (state.users && state.users.length > 0) {
+    return state.users.filter((u) => u && u.status !== 'Deleted');
+  }
+  const stored = getStoredUsers();
+  if (stored && stored.length > 0) {
+    state.users = stored;
+    return stored.filter((u) => u && u.status !== 'Deleted');
+  }
+  initDemoSeedUsers();
+  return getStoredUsers().filter((u) => u && u.status !== 'Deleted');
 }
 function getVisits() {
   return state.visits || [];
@@ -3099,6 +3574,8 @@ function logout() {
 ========================================== */
 
 async function initPage() {
+  initDemoSeedUsers();
+
   const loginForm = document.getElementById('loginForm');
   const loginError = document.getElementById('loginError');
   const menuToggle = document.getElementById('menuToggle');
@@ -3250,6 +3727,7 @@ async function initPage() {
   if (loginForm) {
     loginForm.addEventListener('submit', async (event) => {
       event.preventDefault();
+      initDemoSeedUsers();
       const loginInput = document.getElementById('loginId');
       const passwordInput = document.getElementById('password');
       const identifier = (loginInput?.value || '').trim();
