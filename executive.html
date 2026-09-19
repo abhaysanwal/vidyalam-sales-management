@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vidyalam Laminates | Executive Dashboard</title>
+    <link rel="icon" type="image/png" href="assets/vidyalam-logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body class="dashboard-page executive-page">
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <img src="assets/vidyalam-logo.png" alt="Vidyalam Laminates logo" class="brand-logo sidebar-logo" />
+        </div>
+
+        <nav class="sidebar-nav">
+          <button type="button" class="nav-item active" data-view="dashboard"><span class="nav-icon">◫</span> Dashboard</button>
+          <button type="button" class="nav-item" data-view="attendance"><span class="nav-icon">📅</span> Attendance</button>
+          <button type="button" class="nav-item" data-view="addVisit"><span class="nav-icon">＋</span> Add Visit</button>
+          <button type="button" class="nav-item" data-view="visits"><span class="nav-icon">▣</span> My Visits</button>
+          <button type="button" class="nav-item" data-view="customers"><span class="nav-icon">◎</span> Customers</button>
+          <button type="button" class="nav-item" data-view="followups"><span class="nav-icon">◔</span> Follow-ups</button>
+          <button type="button" class="nav-item" data-view="reports"><span class="nav-icon">▤</span> My Reports</button>
+          <button type="button" class="nav-item" data-view="profile"><span class="nav-icon">◍</span> Profile</button>
+          <button type="button" class="nav-item bottom-link" data-view="logout"><span class="nav-icon">⇠</span> Logout</button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="profile-mini">
+            <div class="avatar">RS</div>
+            <div>
+              <strong id="execSidebarName">Sales Executive</strong>
+              <small>Sales Executive</small>
+            </div>
+          </div>
+        </div>
+      </aside>
+      <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+      <main class="content-panel">
+        <header class="topbar">
+          <div class="topbar-main">
+            <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">☰</button>
+            <div>
+              <p class="eyebrow">Overview</p>
+              <h1 id="execPageTitle">Dashboard</h1>
+            </div>
+          </div>
+
+          <div class="topbar-actions">
+            <div class="search-box compact">
+              <span>⌕</span>
+              <input id="execSearchInput" type="search" placeholder="Search my records" />
+            </div>
+            <div class="notif-wrapper" id="notifWrapper">
+              <button class="icon-btn notif-bell-btn" id="notifBellBtn" type="button" aria-label="Notifications" title="Notifications">
+                <span class="bell-icon">🔔</span>
+                <span class="notif-badge" id="notifBadge" style="display: none;">0</span>
+              </button>
+            </div>
+            <div class="user-pill">
+              <div class="avatar small">RS</div>
+              <div>
+                <strong id="execHeaderName">Sales Executive</strong>
+                <small id="execHeaderMeta">North Zone</small>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div id="executiveContent"></div>
+      </main>
+    </div>
+
+    <div id="adminModalContainer"></div>
+    <div id="toastContainer"></div>
+    <script src="js/script.js"></script>
+  </body>
+</html>
